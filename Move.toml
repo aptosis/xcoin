@@ -1,0 +1,23 @@
+[package]
+name = "xcoin"
+version = "0.0.0"
+authors = ["Ian Macalinao <ian@aptos.is>"]
+license = "Apache-2.0"
+
+[readme]
+title = "XCoin by Aptos.is"
+
+[addresses]
+Std = "0x1"
+AptosFramework = "0x1"
+xcoin = "0xc4df049d127bd1432dfadf7142e8e66d8cee12f79413c5c6af46236c00fff2eb"
+
+[dependencies.MoveStdlib]
+git = "https://github.com/aptos-labs/aptos-core.git"
+subdir = "aptos-move/framework/move-stdlib"
+rev = "45140fcf79c2afd3ce8c86bb9952e90632533cbb"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+subdir = "aptos-move/framework/aptos-framework"
+rev = "45140fcf79c2afd3ce8c86bb9952e90632533cbb"
