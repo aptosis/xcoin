@@ -1,6 +1,6 @@
-/// Exposes helpers for interacting with [AptosFramework::Coin].
+/// xcoin is a series of eXtensions to [AptosFramework::Coin].
 /// 
-/// - `transfer_test_coin` creates an account if it doesn't exist before transferring `TestCoin`.
+/// - `xcoin::transfer_test_coin` creates an account if it doesn't exist before transferring `TestCoin`.
 
 module xcoin::xcoin {
     use AptosFramework::Account;
