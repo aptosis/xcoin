@@ -1,6 +1,7 @@
 /// xcoin is a series of eXtensions to [AptosFramework::Coin].
 /// 
-/// - `xcoin::fund_account` creates an account if it doesn't exist before transferring `TestCoin`.
+/// - `xcoin::fund` creates an account if it doesn't exist before transferring `TestCoin`.
+/// - `xcoin::xfer` allows transferring Coins to users that may not have an account.
 
 module xcoin::xcoin {
     use Std::Signer;

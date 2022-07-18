@@ -2,7 +2,8 @@
 
 xcoin is a series of eXtensions to [AptosFramework::Coin].
 
-- `xcoin::transfer_test_coin` creates an account if it doesn't exist before transferring `TestCoin`.
+- `xcoin::fund` creates an account if it doesn't exist before transferring `TestCoin`.
+- `xcoin::xfer` allows transferring Coins to users that may not have an account.
 
 ## Installation
 
@@ -10,7 +11,7 @@ To use xcoin in your code, add the following to the `[addresses]` section of you
 
 ```toml
 [addresses]
-xcoin = "0xc4df049d127bd1432dfadf7142e8e66d8cee12f79413c5c6af46236c00fff2eb"
+xcoin = "0x69718ef82997b31b7c1612cbc6b7eb0e3224897e631506d9675888b71f0c775a"
 ```
 
 
