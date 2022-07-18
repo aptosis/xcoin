@@ -9,8 +9,12 @@ title = "XCoin by Aptos.is"
 
 [addresses]
 Std = "0x1"
-AptosFramework = "0x1"
-xcoin = "0xc4df049d127bd1432dfadf7142e8e66d8cee12f79413c5c6af46236c00fff2eb"
+xcoin_deployer = "0x156bf4547b14bb360c46880976ac87987e7ada3aa9477596f3001e3288195533"
+xcoin = "0x69718ef82997b31b7c1612cbc6b7eb0e3224897e631506d9675888b71f0c775a"
+
+[dependencies.aptest]
+git = "https://github.com/aptosis/aptest.git"
+rev = "f00c8cdafc2b5042c5091c744c9458c7fff5757a"
 
 [dependencies.MoveStdlib]
 git = "https://github.com/aptos-labs/aptos-core.git"
@@ -21,3 +25,7 @@ rev = "45140fcf79c2afd3ce8c86bb9952e90632533cbb"
 git = "https://github.com/aptos-labs/aptos-core.git"
 subdir = "aptos-move/framework/aptos-framework"
 rev = "45140fcf79c2afd3ce8c86bb9952e90632533cbb"
+
+[dependencies.Deployer]
+git = "https://github.com/DeployDAO/aptos-deployer.git"
+rev = "488f837be5818a2e92293aca16e53c986434dced"

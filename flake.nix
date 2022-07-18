@@ -15,6 +15,7 @@
         }) // move-nix.packages.${system};
       in
       {
+        packages = { inherit (pkgs) af-cli; };
         devShells = {
           default = import ./shell.nix { inherit pkgs; };
         };
