@@ -1,28 +1,29 @@
-#[test_only]
-module xcoin::xcoin_tests {
-    use AptosFramework::Account;
-    use AptosFramework::TestCoin::TestCoin;
+/// Tests for `xcoin::fund`.
+module xcoin::fund_tests {
+    use aptos_framework::account;
+    use aptos_framework::test_coin::TestCoin;
     use xcoin::fund;
 
-    use aptest::account;
+    use aptest::aptest;
+    use aptest::acct;
     use aptest::check;
 
     #[test(
-        resources = @CoreResources,
-        framework = @AptosFramework,
+        resources = @core_resources,
+        framework = @aptos_framework,
         sender = @0xa11ce
     )]
     /// Test sending coins and initializing an account
-    public(script) fun test_fund_account_to_new_account(
+    public entry fun test_fund_account_to_new_account(
         resources: signer,
         framework: signer,
         sender: signer
     ) {
-        account::prepare(&resources, &framework);
-        account::setup(&resources, &sender, 1);
+        aptest::setup(&resources, &framework);
+        acct::create(&resources, &sender, 1);
 
         // account should not exist initially
-        assert!(!Account::exists_at(@0xb0b), 1);
+        assert!(!account::exists_at(@0xb0b), 1);
 
         fund::fund_account(
             &sender,
@@ -31,30 +32,30 @@ module xcoin::xcoin_tests {
         );
 
         // now account exists
-        assert!(Account::exists_at(@0xb0b), 1);
+        assert!(account::exists_at(@0xb0b), 1);
         check::address_balance<TestCoin>(@0xb0b, 1);
     }
 
     #[test(
-        resources = @CoreResources,
-        framework = @AptosFramework,
+        resources = @core_resources,
+        framework = @aptos_framework,
         sender = @0xa11ce,
         recipient = @0xb0b,
     )]
     /// Test sending coins and initializing an account
-    public(script) fun test_fund_account_to_existing_account(
+    public entry fun test_fund_account_to_existing_account(
         resources: signer,
         framework: signer,
         sender: signer,
         recipient: signer,
     ) {
-        account::prepare(&resources, &framework);
+        aptest::setup(&resources, &framework);
 
-        account::setup(&resources, &sender, 1);
-        account::setup(&resources, &recipient, 1);
+        acct::create(&resources, &sender, 1);
+        acct::create(&resources, &recipient, 1);
 
         // account should exist initially
-        assert!(Account::exists_at(@0xb0b), 1);
+        assert!(account::exists_at(@0xb0b), 1);
         check::address_balance<TestCoin>(@0xb0b, 1);
 
         fund::fund_account(

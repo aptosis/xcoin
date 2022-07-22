@@ -1,15 +1,15 @@
-/// xcoin is a series of eXtensions to [AptosFramework::Coin].
+/// xcoin is a series of eXtensions to [aptos_framework::coin].
 /// 
 /// - `xcoin::fund` creates an account if it doesn't exist before transferring `TestCoin`.
 /// - `xcoin::xfer` allows transferring Coins to users that may not have an account.
 
 module xcoin::xcoin {
-    use Std::Signer;
-    use Std::Errors;
+    use std::signer;
+    use std::errors;
 
-    use AptosFramework::Account::{Self, SignerCapability};
+    use aptos_framework::account::{Self, SignerCapability};
 
-    use Deployer::Deployer;
+    use deployer::deployer;
 
     friend xcoin::xfer;
 
@@ -24,27 +24,25 @@ module xcoin::xcoin {
     }
 
     /// Initializes the protocol with this module being its own signer.
-    public(script) fun initialize(self: signer) {
-        let signer_cap = Deployer::retrieve_resource_account_cap(&self);
-        let s = Account::create_signer_with_capability(&signer_cap);
-        assert!(
-            Signer::address_of(&s) == @xcoin,
-            Errors::requires_capability(ENOT_SELF)
-        );
-        move_to(&self, SelfResources { signer_cap });
+    public entry fun initialize(self: &signer) {
+        let signer_cap = deployer::retrieve_resource_account_cap(self);
+        initialize_internal(signer_cap);
     }
 
     #[test_only]
-    /// Initializes the protocol without a separate LP store.
-    /// This requires one to call `Pair::create_for_testing` to create pairs.
-    public fun initialize_for_testing(
-        deployer: &signer,
-        self: &signer,
+    /// Initializes the protocol for testing.
+    public fun initialize_for_testing(deployer: &signer) {
+        let (_, resource_signer_cap) = account::create_resource_account(deployer, b"xcoin");
+        initialize_internal(resource_signer_cap);
+    }
+
+    fun initialize_internal(
+        resource_signer_cap: SignerCapability,
     ) {
-        let (resource, resource_signer_cap) = Account::create_resource_account(deployer, b"xcoin");
+        let self = &account::create_signer_with_capability(&resource_signer_cap);
         assert!(
-            Signer::address_of(&resource) == @xcoin,
-            Errors::requires_capability(ENOT_SELF)
+            signer::address_of(self) == @xcoin,
+            errors::requires_capability(ENOT_SELF)
         );
         move_to(self, SelfResources {
             signer_cap: resource_signer_cap,
@@ -54,6 +52,6 @@ module xcoin::xcoin {
     /// Creates the xcoin signer.
     public(friend) fun get_signer(): signer acquires SelfResources {
         let store = borrow_global<SelfResources>(@xcoin);
-        Account::create_signer_with_capability(&store.signer_cap)
+        account::create_signer_with_capability(&store.signer_cap)
     }
 }

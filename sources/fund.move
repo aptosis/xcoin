@@ -1,20 +1,20 @@
 /// Funds new accounts.
 
 module xcoin::fund {
-    use AptosFramework::Account;
-    use AptosFramework::Coin;
-    use AptosFramework::TestCoin::TestCoin;
+    use aptos_framework::account;
+    use aptos_framework::coin;
+    use aptos_framework::test_coin::TestCoin;
 
     /// Transfers `TestCoin`.
     /// If the account does not exist, it creates an account before doing so.
-    public(script) fun fund_account(
+    public entry fun fund_account(
         from: &signer,
         to: address,
         amount: u64,
     ) {
-        if (!Account::exists_at(to)) {
-            Account::create_account(to);
+        if (!account::exists_at(to)) {
+            account::create_account(to);
         };
-        Coin::transfer<TestCoin>(from, to, amount);
+        coin::transfer<TestCoin>(from, to, amount);
     }
 }

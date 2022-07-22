@@ -1,30 +1,30 @@
-#[test_only]
 /// Tests for `xcoin::xfer`.
 module xcoin::xfer_tests {
-    use Std::ASCII;
-    use Std::Signer;
+    use std::string;
+    use std::signer;
 
-    use AptosFramework::Coin;
-    use AptosFramework::Timestamp;
+    use aptos_framework::coin;
+    use aptos_framework::timestamp;
 
     use xcoin::xcoin;
     use xcoin::xfer;
 
-    use aptest::account;
+    use aptest::aptest;
+    use aptest::acct;
     use aptest::check;
 
     struct FMD { }
 
     #[test(
-        resources = @CoreResources,
-        framework = @AptosFramework,
+        resources = @core_resources,
+        framework = @aptos_framework,
         xcoin = @xcoin,
         xcoin_deployer = @xcoin_deployer,
         sender = @0xa11ce,
         recipient = @0xb0b,
     )]
     /// Test sending coins and initializing an account
-    public(script) fun test_accept(
+    public entry fun test_accept(
         resources: signer,
         framework: signer,
         xcoin: signer,
@@ -32,29 +32,29 @@ module xcoin::xfer_tests {
         sender: signer,
         recipient: signer,
     ) {
-        account::prepare(&resources, &framework);
-        xcoin::initialize_for_testing(&xcoin_deployer, &xcoin);
+        aptest::setup(&resources, &framework);
+        xcoin::initialize_for_testing(&xcoin_deployer);
 
-        account::setup(&resources, &sender, 1000);
-        account::setup(&resources, &recipient, 1000);
+        acct::create(&resources, &sender, 1000);
+        acct::create(&resources, &recipient, 1000);
 
-        Timestamp::set_time_has_started_for_testing(&resources);
+        timestamp::set_time_has_started_for_testing(&framework);
 
-        let (mint_cap, burn_cap) = Coin::initialize<FMD>(
+        let (mint_cap, burn_cap) = coin::initialize<FMD>(
             &xcoin,
-            ASCII::string(b"Fake money"),
-            ASCII::string(b"FMD"),
+            string::utf8(b"Fake money"),
+            string::utf8(b"FMD"),
             1,
             false,
         );
 
         // create sender FMD
-        Coin::register<FMD>(&sender);
-        Coin::deposit(Signer::address_of(&sender), Coin::mint<FMD>(100, &mint_cap));
+        coin::register<FMD>(&sender);
+        coin::deposit(signer::address_of(&sender), coin::mint<FMD>(100, &mint_cap));
         check::balance<FMD>(&sender, 100);
 
         // initiate coin transfer
-        xfer::initiate<FMD>(&sender, Signer::address_of(&recipient), 100, 0);
+        xfer::initiate<FMD>(&sender, signer::address_of(&recipient), 100, 0);
         check::balance<FMD>(&sender, 0);
 
         // accept coin transfer
@@ -62,20 +62,20 @@ module xcoin::xfer_tests {
         check::balance<FMD>(&sender, 0);
         check::balance<FMD>(&recipient, 100);
 
-        Coin::destroy_mint_cap(mint_cap);
-        Coin::destroy_burn_cap(burn_cap);
+        coin::destroy_mint_cap(mint_cap);
+        coin::destroy_burn_cap(burn_cap);
     }
 
     #[test(
-        resources = @CoreResources,
-        framework = @AptosFramework,
+        resources = @core_resources,
+        framework = @aptos_framework,
         xcoin = @xcoin,
         xcoin_deployer = @xcoin_deployer,
         sender = @0xa11ce,
         recipient = @0xb0b,
     )]
     /// Test sending coins and initializing an account
-    public(script) fun test_cancel(
+    public entry fun test_cancel(
         resources: signer,
         framework: signer,
         xcoin: signer,
@@ -83,36 +83,36 @@ module xcoin::xfer_tests {
         sender: signer,
         recipient: signer,
     ) {
-        account::prepare(&resources, &framework);
-        xcoin::initialize_for_testing(&xcoin_deployer, &xcoin);
+        aptest::setup(&resources, &framework);
+        xcoin::initialize_for_testing(&xcoin_deployer);
 
-        account::setup(&resources, &sender, 1000);
-        account::setup(&resources, &recipient, 1000);
+        acct::create(&resources, &sender, 1000);
+        acct::create(&resources, &recipient, 1000);
 
-        Timestamp::set_time_has_started_for_testing(&resources);
+        timestamp::set_time_has_started_for_testing(&framework);
 
-        let (mint_cap, burn_cap) = Coin::initialize<FMD>(
+        let (mint_cap, burn_cap) = coin::initialize<FMD>(
             &xcoin,
-            ASCII::string(b"Fake money"),
-            ASCII::string(b"FMD"),
+            string::utf8(b"Fake money"),
+            string::utf8(b"FMD"),
             1,
             false,
         );
 
         // create sender FMD
-        Coin::register<FMD>(&sender);
-        Coin::deposit(Signer::address_of(&sender), Coin::mint<FMD>(100, &mint_cap));
+        coin::register<FMD>(&sender);
+        coin::deposit(signer::address_of(&sender), coin::mint<FMD>(100, &mint_cap));
         check::balance<FMD>(&sender, 100);
 
         // initiate coin transfer
-        xfer::initiate<FMD>(&sender, Signer::address_of(&recipient), 100, 0);
+        xfer::initiate<FMD>(&sender, signer::address_of(&recipient), 100, 0);
         check::balance<FMD>(&sender, 0);
 
         // cancel coin transfer
-        xfer::cancel<FMD>(&sender, Signer::address_of(&recipient), 0);
+        xfer::cancel<FMD>(&sender, signer::address_of(&recipient), 0);
         check::balance<FMD>(&sender, 100);
 
-        Coin::destroy_mint_cap(mint_cap);
-        Coin::destroy_burn_cap(burn_cap);
+        coin::destroy_mint_cap(mint_cap);
+        coin::destroy_burn_cap(burn_cap);
     }
 }

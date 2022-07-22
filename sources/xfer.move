@@ -12,14 +12,14 @@
 /// 2. Call `xfer::accept` to accept coins.
 ///   a. If the recipient does not want to accept the coins, call `xfer::reject` to reject the coins.
 module xcoin::xfer {
-    use Std::BCS;
-    use Std::Errors;
-    use Std::Signer;
+    use std::bcs;
+    use std::errors;
+    use std::signer;
 
-    use AptosFramework::Account::{Self, SignerCapability};
-    use AptosFramework::Coin::{Self, Coin};
-    use AptosFramework::Table::{Self, Table};
-    use AptosFramework::Timestamp;
+    use aptos_framework::account::{Self, SignerCapability};
+    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::table::{Self, Table};
+    use aptos_framework::timestamp;
 
     use xcoin::xcoin;
 
@@ -75,60 +75,60 @@ module xcoin::xfer {
         if (!exists<InboxMapping>(@xcoin)) {
             let s = xcoin::get_signer();
             move_to<InboxMapping>(&s, InboxMapping {
-                addresses: Table::new(),
+                addresses: table::new(),
             });
         };
         let mapping = borrow_global<InboxMapping>(@xcoin); 
-        if (!Table::contains(&mapping.addresses, recipient)) {
+        if (!table::contains(&mapping.addresses, recipient)) {
             let mapping_mut = borrow_global_mut<InboxMapping>(@xcoin); 
             let s = xcoin::get_signer();
-            let (inbox_signer, inbox_cap) = Account::create_resource_account(&s, BCS::to_bytes(&recipient));
-            let inbox_addr = Signer::address_of(&inbox_signer);
-            Table::add(&mut mapping_mut.addresses, recipient, inbox_addr);
+            let (inbox_signer, inbox_cap) = account::create_resource_account(&s, bcs::to_bytes(&recipient));
+            let inbox_addr = signer::address_of(&inbox_signer);
+            table::add(&mut mapping_mut.addresses, recipient, inbox_addr);
             move_to<InboxMeta>(&inbox_signer, InboxMeta {
                 signer_cap: inbox_cap,
             });
             inbox_addr
         } else {
-            *Table::borrow(&mapping.addresses, recipient)
+            *table::borrow(&mapping.addresses, recipient)
         }
     }
 
     /// Creates a transfer.
     ///
     /// @param deadline_duration - the duration in seconds until the transfer may be cancelled.
-    public(script) fun initiate<CoinType>(
+    public entry fun initiate<CoinType>(
         from: &signer,
         to: address,
         amount: u64,
         deadline_duration: u64,
     ) acquires InboxMapping, InboxMeta, Inbox {
-        let coin = Coin::withdraw<CoinType>(from, amount);
-        let deadline = Timestamp::now_seconds() + deadline_duration;
+        let coin = coin::withdraw<CoinType>(from, amount);
+        let deadline = timestamp::now_seconds() + deadline_duration;
         initiate_transfer(from, to, coin, deadline);
     }
 
     /// Cancels a transfer.
-    public(script) fun cancel<CoinType>(
+    public entry fun cancel<CoinType>(
         sender: &signer,
         recipient_addr: address,
         id: u64,
     ) acquires InboxMapping, Inbox {
         let coin = cancel_transfer<CoinType>(sender, recipient_addr, id);
-        Coin::deposit<CoinType>(Signer::address_of(sender), coin);
+        coin::deposit<CoinType>(signer::address_of(sender), coin);
     }
 
     /// Accepts a transfer.
-    public(script) fun accept<CoinType>(
+    public entry fun accept<CoinType>(
         recipient: &signer,
         id: u64,
     ) acquires InboxMapping, Inbox {
-        let recipient_addr = Signer::address_of(recipient);
-        if (!Coin::is_account_registered<CoinType>(recipient_addr)) {
-            Coin::register<CoinType>(recipient);
+        let recipient_addr = signer::address_of(recipient);
+        if (!coin::is_account_registered<CoinType>(recipient_addr)) {
+            coin::register<CoinType>(recipient);
         };
         let coin = accept_transfer<CoinType>(recipient, id);
-        Coin::deposit<CoinType>(recipient_addr, coin);
+        coin::deposit<CoinType>(recipient_addr, coin);
     }
 
     /// Initiates a transfer to an inbox.
@@ -142,9 +142,9 @@ module xcoin::xfer {
         // If there are no transfers for this coin, create the table for the coin.
         if (!exists<Inbox<CoinType>>(inbox_addr)) {
             let signer_cap = &borrow_global<InboxMeta>(inbox_addr).signer_cap;
-            let inbox_signer = Account::create_signer_with_capability(signer_cap);
+            let inbox_signer = account::create_signer_with_capability(signer_cap);
             move_to<Inbox<CoinType>>(&inbox_signer, Inbox {
-                pending: Table::new(),
+                pending: table::new(),
                 size: 0,
             });
         };
@@ -152,7 +152,7 @@ module xcoin::xfer {
         let inbox = borrow_global_mut<Inbox<CoinType>>(inbox_addr);
         inbox_create_transfer_internal(
             inbox,
-            Signer::address_of(from),
+            signer::address_of(from),
             source,
             deadline,
         )
@@ -172,12 +172,12 @@ module xcoin::xfer {
             creator,
         } = remove_transfer_internal<CoinType>(recipient_addr, id);
         assert!(
-            creator == Signer::address_of(sender),
-            Errors::requires_role(ECANNOT_REFUND_NOT_CREATOR),
+            creator == signer::address_of(sender),
+            errors::requires_role(ECANNOT_REFUND_NOT_CREATOR),
         );
         assert!(
-            Timestamp::now_seconds() >= deadline,
-            Errors::invalid_state(EREFUND_DEADLINE_NOT_MET)
+            timestamp::now_seconds() >= deadline,
+            errors::invalid_state(EREFUND_DEADLINE_NOT_MET)
         );
         amount
     }
@@ -191,7 +191,7 @@ module xcoin::xfer {
             amount,
             creator: _creator,
             deadline: _deadline,
-        } = remove_transfer_internal<CoinType>(Signer::address_of(recipient), id);
+        } = remove_transfer_internal<CoinType>(signer::address_of(recipient), id);
         amount
     }
 
@@ -214,7 +214,7 @@ module xcoin::xfer {
         deadline: u64,
     ): u64 {
         let id = inbox.size;
-        Table::add(&mut inbox.pending, id, Transfer {
+        table::add(&mut inbox.pending, id, Transfer {
             creator: from,
             amount,
             deadline,
@@ -229,9 +229,9 @@ module xcoin::xfer {
         id: u64,
     ): Transfer<CoinType> {
         assert!(
-            Table::contains(&mut inbox.pending, id),
-            Errors::not_published(ETRANSFER_NOT_PUBLISHED)
+            table::contains(&mut inbox.pending, id),
+            errors::not_published(ETRANSFER_NOT_PUBLISHED)
         );
-        Table::remove(&mut inbox.pending, id)
+        table::remove(&mut inbox.pending, id)
     }
 }
